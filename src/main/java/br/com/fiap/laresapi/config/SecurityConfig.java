@@ -12,6 +12,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 @Configuration
 public class SecurityConfig {
 
+	private final SecurityErrorHandler securityErrorHandler;
+
+	public SecurityConfig(SecurityErrorHandler securityErrorHandler) {
+		this.securityErrorHandler = securityErrorHandler;
+	}
+
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		return http
@@ -31,7 +37,12 @@ public class SecurityConfig {
 						.requestMatchers(HttpMethod.GET, "/categorias").authenticated()
 						.requestMatchers("/usuarios/me").authenticated()
 						.anyRequest().authenticated())
+				.exceptionHandling(exceptionHandling -> exceptionHandling
+						.authenticationEntryPoint(securityErrorHandler)
+						.accessDeniedHandler(securityErrorHandler))
 				.oauth2ResourceServer(resourceServer -> resourceServer
+						.authenticationEntryPoint(securityErrorHandler)
+						.accessDeniedHandler(securityErrorHandler)
 						.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
 				.build();
 	}
