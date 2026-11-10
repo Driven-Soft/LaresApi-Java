@@ -1,0 +1,37 @@
+package br.com.fiap.laresapi.controller;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+import br.com.fiap.laresapi.dto.auth.LoginRequest;
+import br.com.fiap.laresapi.dto.auth.LoginResponse;
+import br.com.fiap.laresapi.dto.auth.RegistroRequest;
+import br.com.fiap.laresapi.dto.auth.RegistroResponse;
+import br.com.fiap.laresapi.service.AutenticacaoService;
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/auth")
+public class AuthController {
+
+	private final AutenticacaoService autenticacaoService;
+
+	public AuthController(AutenticacaoService autenticacaoService) {
+		this.autenticacaoService = autenticacaoService;
+	}
+
+	@PostMapping("/registro")
+	@ResponseStatus(HttpStatus.CREATED)
+	public RegistroResponse registrar(@Valid @RequestBody RegistroRequest request) {
+		return autenticacaoService.registrar(request);
+	}
+
+	@PostMapping("/login")
+	public LoginResponse login(@Valid @RequestBody LoginRequest request) {
+		return autenticacaoService.autenticar(request);
+	}
+}

@@ -44,7 +44,7 @@ public class Usuario {
 	@OneToMany(mappedBy = "usuario")
 	private List<HistoricoStatus> alteracoesHistorico = new ArrayList<>();
 
-	protected Usuario() {
+	public Usuario() {
 	}
 
 	public Long getId() {
