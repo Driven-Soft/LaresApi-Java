@@ -5,6 +5,7 @@ import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -28,5 +29,10 @@ public class RabbitMqConfig {
 	@Bean
 	Binding ocorrenciaCriadaBinding(Queue ocorrenciaCriadaQueue, DirectExchange laresExchange) {
 		return BindingBuilder.bind(ocorrenciaCriadaQueue).to(laresExchange).with(ROUTING_KEY);
+	}
+
+	@Bean
+	JacksonJsonMessageConverter jacksonJsonMessageConverter() {
+		return new JacksonJsonMessageConverter();
 	}
 }

@@ -20,9 +20,11 @@ import br.com.fiap.laresapi.entity.Ocorrencia;
 import br.com.fiap.laresapi.entity.StatusOcorrencia;
 import br.com.fiap.laresapi.entity.Usuario;
 import br.com.fiap.laresapi.mapper.OcorrenciaMapper;
+import br.com.fiap.laresapi.messaging.OcorrenciaCriadaEvent;
 import br.com.fiap.laresapi.repository.CategoriaRepository;
 import br.com.fiap.laresapi.repository.OcorrenciaRepository;
 import br.com.fiap.laresapi.repository.UsuarioRepository;
+import org.springframework.context.ApplicationEventPublisher;
 
 @Service
 public class OcorrenciaService {
@@ -33,16 +35,19 @@ public class OcorrenciaService {
 	private final UsuarioRepository usuarioRepository;
 	private final CategoriaRepository categoriaRepository;
 	private final OcorrenciaMapper ocorrenciaMapper;
+	private final ApplicationEventPublisher eventPublisher;
 
 	public OcorrenciaService(
 			OcorrenciaRepository ocorrenciaRepository,
 			UsuarioRepository usuarioRepository,
 			CategoriaRepository categoriaRepository,
-			OcorrenciaMapper ocorrenciaMapper) {
+			OcorrenciaMapper ocorrenciaMapper,
+			ApplicationEventPublisher eventPublisher) {
 		this.ocorrenciaRepository = ocorrenciaRepository;
 		this.usuarioRepository = usuarioRepository;
 		this.categoriaRepository = categoriaRepository;
 		this.ocorrenciaMapper = ocorrenciaMapper;
+		this.eventPublisher = eventPublisher;
 	}
 
 	@Transactional
@@ -62,6 +67,7 @@ public class OcorrenciaService {
 		ocorrencia.adicionarHistorico(criarHistorico(ocorrencia, usuario, null, StatusOcorrencia.RECEBIDA, null, agora));
 
 		Ocorrencia salva = ocorrenciaRepository.save(ocorrencia);
+		eventPublisher.publishEvent(new OcorrenciaCriadaEvent(salva.getId()));
 		return ocorrenciaMapper.toResponse(salva, false);
 	}
 
