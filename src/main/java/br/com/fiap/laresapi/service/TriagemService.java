@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import br.com.fiap.laresapi.dto.ai.ConteudoOcorrenciaIa;
 import br.com.fiap.laresapi.dto.triagem.TriagemRequest;
 import br.com.fiap.laresapi.dto.triagem.TriagemResultado;
 import br.com.fiap.laresapi.entity.Categoria;
@@ -37,6 +38,11 @@ public class TriagemService {
 
 	@Transactional
 	public void aplicarResultado(Long ocorrenciaId, TriagemResultado resultado) {
+		aplicarResultado(ocorrenciaId, resultado, null);
+	}
+
+	@Transactional
+	public void aplicarResultado(Long ocorrenciaId, TriagemResultado resultado, ConteudoOcorrenciaIa conteudo) {
 		Ocorrencia ocorrencia = ocorrenciaRepository.findById(ocorrenciaId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ocorrência não encontrada"));
 		if (ocorrencia.getStatus() != StatusOcorrencia.RECEBIDA) {
@@ -57,6 +63,10 @@ public class TriagemService {
 		ocorrencia.setCategoria(categoria);
 		ocorrencia.setPrioridade(resultado.prioridade());
 		ocorrencia.setPrazoEstimadoDias(resultado.prazoEstimadoDias());
+		if (conteudo != null) {
+			ocorrencia.setResumoIa(conteudo.resumoIa());
+			ocorrencia.setMensagemCidadao(conteudo.mensagemCidadao());
+		}
 		ocorrencia.setStatus(StatusOcorrencia.TRIADA);
 		ocorrencia.setDataAtualizacao(agora);
 		ocorrencia.adicionarHistorico(historico);

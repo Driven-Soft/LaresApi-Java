@@ -4,7 +4,7 @@ WORKDIR /workspace
 COPY mvnw pom.xml ./
 COPY .mvn ./.mvn
 COPY src ./src
-RUN chmod +x mvnw && ./mvnw -B package
+RUN chmod +x mvnw && ./mvnw -B -DskipTests package
 
 FROM eclipse-temurin:17-jre
 
@@ -14,4 +14,4 @@ COPY --from=build /workspace/target/lares-api-0.0.1-SNAPSHOT.jar app.jar
 USER appuser
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "/app/app.jar"]

@@ -7,9 +7,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
 
+import br.com.fiap.laresapi.dto.ai.ConteudoOcorrenciaIa;
 import br.com.fiap.laresapi.dto.triagem.TriagemRequest;
 import br.com.fiap.laresapi.dto.triagem.TriagemResultado;
 import br.com.fiap.laresapi.integration.TriagemClient;
+import br.com.fiap.laresapi.service.ConteudoOcorrenciaAiService;
 import br.com.fiap.laresapi.service.TriagemService;
 
 @Component
@@ -19,10 +21,15 @@ public class OcorrenciaTriagemConsumer {
 
 	private final TriagemService triagemService;
 	private final TriagemClient triagemClient;
+	private final ConteudoOcorrenciaAiService conteudoAiService;
 
-	public OcorrenciaTriagemConsumer(TriagemService triagemService, TriagemClient triagemClient) {
+	public OcorrenciaTriagemConsumer(
+			TriagemService triagemService,
+			TriagemClient triagemClient,
+			ConteudoOcorrenciaAiService conteudoAiService) {
 		this.triagemService = triagemService;
 		this.triagemClient = triagemClient;
+		this.conteudoAiService = conteudoAiService;
 	}
 
 	@RabbitListener(queues = RabbitMqConfig.QUEUE_NAME)
@@ -37,12 +44,30 @@ public class OcorrenciaTriagemConsumer {
 			}
 
 			TriagemResultado resultado = triagemClient.classificar(request);
-			triagemService.aplicarResultado(event.ocorrenciaId(), resultado);
+			ConteudoOcorrenciaIa conteudo = gerarConteudo(event.ocorrenciaId(), request, resultado);
+			triagemService.aplicarResultado(event.ocorrenciaId(), resultado, conteudo);
 		} catch (RestClientException | IllegalArgumentException | IllegalStateException | ResponseStatusException exception) {
 			LOGGER.error(
 					"Falha ao triar a ocorrência {}; ela permanece com status RECEBIDA",
 					event.ocorrenciaId(),
 					exception);
+		}
+	}
+
+	private ConteudoOcorrenciaIa gerarConteudo(Long ocorrenciaId, TriagemRequest request, TriagemResultado resultado) {
+		try {
+			return conteudoAiService.gerar(
+					request.descricao(),
+					request.bairro(),
+					resultado.categoriaCodigo(),
+					resultado.prioridade().name(),
+					resultado.prazoEstimadoDias());
+		} catch (RuntimeException exception) {
+			LOGGER.warn(
+					"Falha ao gerar os textos de IA da ocorrência {}; a triagem será gravada sem eles",
+					ocorrenciaId,
+					exception);
+			return null;
 		}
 	}
 }

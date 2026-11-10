@@ -15,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import br.com.fiap.laresapi.dto.ai.ConteudoOcorrenciaIa;
 import br.com.fiap.laresapi.dto.triagem.TriagemResultado;
 import br.com.fiap.laresapi.entity.Categoria;
 import br.com.fiap.laresapi.entity.Ocorrencia;
@@ -52,12 +53,15 @@ class TriagemServiceTest {
 
 		triagemService.aplicarResultado(
 				10L,
-				new TriagemResultado("BURACO", PrioridadeOcorrencia.ALTA, 12));
+				new TriagemResultado("BURACO", PrioridadeOcorrencia.ALTA, 12),
+				new ConteudoOcorrenciaIa("Resumo", "Mensagem ao cidadão"));
 
 		assertEquals(StatusOcorrencia.TRIADA, ocorrencia.getStatus());
 		assertEquals(PrioridadeOcorrencia.ALTA, ocorrencia.getPrioridade());
 		assertEquals(12, ocorrencia.getPrazoEstimadoDias());
 		assertEquals(categoria, ocorrencia.getCategoria());
+		assertEquals("Resumo", ocorrencia.getResumoIa());
+		assertEquals("Mensagem ao cidadão", ocorrencia.getMensagemCidadao());
 		assertEquals(1, ocorrencia.getHistorico().size());
 		assertEquals(StatusOcorrencia.RECEBIDA, ocorrencia.getHistorico().get(0).getStatusAnterior());
 		assertEquals(StatusOcorrencia.TRIADA, ocorrencia.getHistorico().get(0).getStatusNovo());
