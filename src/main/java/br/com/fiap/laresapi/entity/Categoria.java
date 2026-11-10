@@ -34,7 +34,7 @@ public class Categoria {
 	@OneToMany(mappedBy = "categoria")
 	private List<Ocorrencia> ocorrencias = new ArrayList<>();
 
-	protected Categoria() {
+	public Categoria() {
 	}
 
 	public Long getId() {

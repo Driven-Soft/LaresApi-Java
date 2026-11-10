@@ -13,6 +13,8 @@ services:
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-lares}
       SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:?Configure RABBITMQ_DEFAULT_PASS in .env}
+      TRIAGEM_BASE_URL: ${TRIAGEM_BASE_URL:-http://host.docker.internal:8000}
+      TRIAGEM_API_KEY: ${TRIAGEM_API_KEY:-}
     ports:
       - "8080:8080"
     depends_on:
