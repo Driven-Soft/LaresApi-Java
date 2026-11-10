@@ -75,7 +75,7 @@ public class Ocorrencia {
 	@OrderBy("dataAlteracao ASC")
 	private List<HistoricoStatus> historico = new ArrayList<>();
 
-	protected Ocorrencia() {
+	public Ocorrencia() {
 	}
 
 	public Long getId() {
@@ -188,5 +188,10 @@ public class Ocorrencia {
 
 	public List<HistoricoStatus> getHistorico() {
 		return historico;
+	}
+
+	public void adicionarHistorico(HistoricoStatus registro) {
+		registro.setOcorrencia(this);
+		historico.add(registro);
 	}
 }

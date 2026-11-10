@@ -9,4 +9,6 @@ import br.com.fiap.laresapi.entity.Categoria;
 public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
 
 	Optional<Categoria> findByCodigo(String codigo);
+
+	java.util.List<Categoria> findAllByOrderByNomeAsc();
 }

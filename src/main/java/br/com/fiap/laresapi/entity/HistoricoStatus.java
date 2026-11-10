@@ -44,7 +44,7 @@ public class HistoricoStatus {
 	@Column(name = "DATA_ALTERACAO", nullable = false)
 	private LocalDateTime dataAlteracao;
 
-	protected HistoricoStatus() {
+	public HistoricoStatus() {
 	}
 
 	public Long getId() {
