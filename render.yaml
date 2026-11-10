@@ -25,3 +25,5 @@ services:
         value: gpt-4o-mini
       - key: TRIAGEM_BASE_URL
         sync: false
+      - key: TRIAGEM_API_KEY
+        sync: false

@@ -25,9 +25,11 @@ import br.com.fiap.laresapi.dto.ocorrencia.OcorrenciaResponse;
 import br.com.fiap.laresapi.entity.StatusOcorrencia;
 import br.com.fiap.laresapi.service.OcorrenciaService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/ocorrencias")
+@SecurityRequirement(name = "bearerAuth")
 public class OcorrenciaController {
 
 	private final OcorrenciaService ocorrenciaService;

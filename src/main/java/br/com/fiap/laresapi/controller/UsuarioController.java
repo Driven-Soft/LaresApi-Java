@@ -10,9 +10,11 @@ import br.com.fiap.laresapi.dto.auth.UsuarioMeResponse;
 import br.com.fiap.laresapi.repository.UsuarioRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/usuarios")
+@SecurityRequirement(name = "bearerAuth")
 public class UsuarioController {
 
 	private final UsuarioRepository usuarioRepository;

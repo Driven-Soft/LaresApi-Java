@@ -28,6 +28,7 @@ public class SecurityConfig {
 				.logout(logout -> logout.disable())
 				.authorizeHttpRequests(authorize -> authorize
 						.requestMatchers("/auth/**").permitAll()
+						.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 						.requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
 						.requestMatchers(HttpMethod.POST, "/ocorrencias").hasRole("CIDADAO")
 						.requestMatchers(HttpMethod.GET, "/ocorrencias/minhas").hasRole("CIDADAO")

@@ -9,9 +9,11 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.fiap.laresapi.dto.categoria.CategoriaResponse;
 import br.com.fiap.laresapi.mapper.CategoriaMapper;
 import br.com.fiap.laresapi.repository.CategoriaRepository;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/categorias")
+@SecurityRequirement(name = "bearerAuth")
 public class CategoriaController {
 
 	private final CategoriaRepository categoriaRepository;
