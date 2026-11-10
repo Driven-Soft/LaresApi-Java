@@ -1,0 +1,17 @@
+Projetos/
+Lares_Henrique.md
+PedidosJavaGS.txt
+planejamento_gs_java_lares.md
+
+target/
+**/target/
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+.env
+.env.*
+!.env.example
+*.log
