@@ -11,13 +11,16 @@ import org.springframework.web.server.ResponseStatusException;
 
 import br.com.fiap.laresapi.dto.PaginaResponse;
 import br.com.fiap.laresapi.dto.ocorrencia.AtualizarOcorrenciaRequest;
+import br.com.fiap.laresapi.dto.ocorrencia.AtualizarStatusRequest;
 import br.com.fiap.laresapi.dto.ocorrencia.OcorrenciaRequest;
 import br.com.fiap.laresapi.dto.ocorrencia.OcorrenciaResponse;
+import br.com.fiap.laresapi.entity.Categoria;
 import br.com.fiap.laresapi.entity.HistoricoStatus;
 import br.com.fiap.laresapi.entity.Ocorrencia;
 import br.com.fiap.laresapi.entity.StatusOcorrencia;
 import br.com.fiap.laresapi.entity.Usuario;
 import br.com.fiap.laresapi.mapper.OcorrenciaMapper;
+import br.com.fiap.laresapi.repository.CategoriaRepository;
 import br.com.fiap.laresapi.repository.OcorrenciaRepository;
 import br.com.fiap.laresapi.repository.UsuarioRepository;
 
@@ -28,14 +31,17 @@ public class OcorrenciaService {
 
 	private final OcorrenciaRepository ocorrenciaRepository;
 	private final UsuarioRepository usuarioRepository;
+	private final CategoriaRepository categoriaRepository;
 	private final OcorrenciaMapper ocorrenciaMapper;
 
 	public OcorrenciaService(
 			OcorrenciaRepository ocorrenciaRepository,
 			UsuarioRepository usuarioRepository,
+			CategoriaRepository categoriaRepository,
 			OcorrenciaMapper ocorrenciaMapper) {
 		this.ocorrenciaRepository = ocorrenciaRepository;
 		this.usuarioRepository = usuarioRepository;
+		this.categoriaRepository = categoriaRepository;
 		this.ocorrenciaMapper = ocorrenciaMapper;
 	}
 
@@ -97,6 +103,7 @@ public class OcorrenciaService {
 	public OcorrenciaResponse atualizar(Long id, Long usuarioId, AtualizarOcorrenciaRequest request) {
 		Ocorrencia ocorrencia = buscarOcorrencia(id);
 		validarDono(ocorrencia, usuarioId);
+		validarEditavel(ocorrencia);
 		ocorrencia.setDescricao(request.descricao().trim());
 		ocorrencia.setBairro(request.bairro().trim());
 		ocorrencia.setLatitude(request.latitude());
@@ -109,7 +116,35 @@ public class OcorrenciaService {
 	public void excluir(Long id, Long usuarioId) {
 		Ocorrencia ocorrencia = buscarOcorrencia(id);
 		validarDono(ocorrencia, usuarioId);
+		validarEditavel(ocorrencia);
 		ocorrenciaRepository.delete(ocorrencia);
+	}
+
+	@Transactional
+	public OcorrenciaResponse atualizarStatus(Long id, Long usuarioId, AtualizarStatusRequest request) {
+		Ocorrencia ocorrencia = buscarOcorrencia(id);
+		Usuario gestor = buscarUsuario(usuarioId);
+		StatusOcorrencia anterior = ocorrencia.getStatus();
+		StatusOcorrencia novo = request.status();
+
+		if (!transicaoPermitida(anterior, novo)) {
+			throw new ResponseStatusException(
+					HttpStatus.CONFLICT,
+					"Transição de status não permitida: " + anterior + " para " + novo);
+		}
+
+		if (request.categoriaId() != null) {
+			Categoria categoria = categoriaRepository.findById(request.categoriaId())
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada"));
+			ocorrencia.setCategoria(categoria);
+		}
+
+		LocalDateTime agora = LocalDateTime.now();
+		ocorrencia.setStatus(novo);
+		ocorrencia.setDataAtualizacao(agora);
+		ocorrencia.adicionarHistorico(criarHistorico(
+				ocorrencia, gestor, anterior, novo, normalizarComentario(request.comentario()), agora));
+		return ocorrenciaMapper.toResponse(ocorrencia, false);
 	}
 
 	private PaginaResponse<OcorrenciaResponse> paraPagina(Page<Ocorrencia> pagina) {
@@ -135,6 +170,25 @@ public class OcorrenciaService {
 		if (!ocorrencia.getUsuario().getId().equals(usuarioId)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não é o titular desta ocorrência");
 		}
+	}
+
+	private void validarEditavel(Ocorrencia ocorrencia) {
+		if (ocorrencia.getStatus() != StatusOcorrencia.RECEBIDA
+				&& ocorrencia.getStatus() != StatusOcorrencia.TRIADA) {
+			throw new ResponseStatusException(
+					HttpStatus.CONFLICT,
+					"Ocorrências só podem ser editadas ou excluídas enquanto RECEBIDAS ou TRIADAS");
+		}
+	}
+
+	private boolean transicaoPermitida(StatusOcorrencia anterior, StatusOcorrencia novo) {
+		return (anterior == StatusOcorrencia.RECEBIDA && novo == StatusOcorrencia.EM_ANDAMENTO)
+				|| (anterior == StatusOcorrencia.TRIADA && novo == StatusOcorrencia.EM_ANDAMENTO)
+				|| (anterior == StatusOcorrencia.EM_ANDAMENTO && novo == StatusOcorrencia.RESOLVIDA);
+	}
+
+	private String normalizarComentario(String comentario) {
+		return comentario == null || comentario.isBlank() ? null : comentario.trim();
 	}
 
 	private void validarPaginacao(PageRequest pageRequest) {

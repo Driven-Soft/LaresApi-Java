@@ -6,6 +6,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -18,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import br.com.fiap.laresapi.dto.PaginaResponse;
 import br.com.fiap.laresapi.dto.ocorrencia.AtualizarOcorrenciaRequest;
+import br.com.fiap.laresapi.dto.ocorrencia.AtualizarStatusRequest;
 import br.com.fiap.laresapi.dto.ocorrencia.OcorrenciaRequest;
 import br.com.fiap.laresapi.dto.ocorrencia.OcorrenciaResponse;
 import br.com.fiap.laresapi.entity.StatusOcorrencia;
@@ -77,6 +79,14 @@ public class OcorrenciaController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void excluir(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
 		ocorrenciaService.excluir(id, usuarioId(jwt));
+	}
+
+	@PatchMapping("/{id}/status")
+	public OcorrenciaResponse atualizarStatus(
+			@PathVariable Long id,
+			@AuthenticationPrincipal Jwt jwt,
+			@Valid @RequestBody AtualizarStatusRequest request) {
+		return ocorrenciaService.atualizarStatus(id, usuarioId(jwt), request);
 	}
 
 	private Long usuarioId(Jwt jwt) {
