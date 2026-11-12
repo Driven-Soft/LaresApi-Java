@@ -2,6 +2,7 @@ package br.com.fiap.laresapi.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,8 +12,10 @@ import br.com.fiap.laresapi.entity.StatusOcorrencia;
 
 public interface OcorrenciaRepository extends JpaRepository<Ocorrencia, Long> {
 
+	@EntityGraph(attributePaths = { "usuario", "categoria" })
 	Page<Ocorrencia> findByUsuarioId(Long usuarioId, Pageable pageable);
 
+	@EntityGraph(attributePaths = { "usuario", "categoria" })
 	@Query("""
 			SELECT o FROM Ocorrencia o
 			WHERE (:bairro IS NULL OR LOWER(o.bairro) = LOWER(:bairro))
@@ -24,6 +27,7 @@ public interface OcorrenciaRepository extends JpaRepository<Ocorrencia, Long> {
 			@Param("status") StatusOcorrencia status,
 			Pageable pageable);
 
+	@EntityGraph(attributePaths = { "usuario", "categoria" })
 	@Query("""
 			SELECT o FROM Ocorrencia o
 			WHERE (:bairro IS NULL OR LOWER(o.bairro) = LOWER(:bairro))
