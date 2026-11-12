@@ -1,0 +1,287 @@
+{
+  "info": {
+    "_postman_id": "4b5e3d6c-7f9a-4a2d-8b1c-6e4f0a2d9c31",
+    "name": "Lares - Integracao de Triagem",
+    "description": "Testes com dados ficticios para a API Java publicada no Render e o servico Lares-IA. Consulte TESTE_INTEGRACAO_TRIAGEM.md antes de executar.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1 - Health da API Java",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{apiBaseUrl}}/actuator/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('API Java responde HTTP 200', function () { pm.response.to.have.status(200); });",
+              "const body = pm.response.json();",
+              "pm.test('Health indica UP', function () { pm.expect(body.status).to.eql('UP'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2 - Health do servico Lares-IA",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{triagemBaseUrl}}/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Servico Lares-IA responde HTTP 200', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3 - Testar endpoint de triagem diretamente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-API-Key",
+            "value": "{{triagemApiKey}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"descricao\": \"Teste ficticio: lampada apagada em uma praca municipal.\",\n  \"bairro\": \"Bairro de teste sem endereco real\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{triagemBaseUrl}}/triagem"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Triagem responde HTTP 200', function () { pm.response.to.have.status(200); });",
+              "const body = pm.response.json();",
+              "pm.test('Categoria pertence ao catalogo', function () { pm.expect(['BURACO', 'ILUMINACAO', 'LIXO', 'CALCADA', 'ARVORE', 'SINALIZACAO', 'OUTROS']).to.include(body.categoria); });",
+              "pm.test('Prioridade e valida', function () { pm.expect(['BAIXA', 'MEDIA', 'ALTA']).to.include(body.prioridade); });",
+              "pm.test('Prazo estimado e positivo', function () { pm.expect(body.prazoEstimadoDias).to.be.a('number').and.to.be.above(0); });",
+              "pm.test('Confianca esta entre zero e um', function () { pm.expect(body.confianca).to.be.a('number').and.to.be.within(0, 1); });",
+              "pm.test('Origem foi informada', function () { pm.expect(['llm', 'fallback']).to.include(body.origem); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4 - Registrar cidadao de teste",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.environment.set('testEmail', `teste.lares.${Date.now()}@example.com`);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Cadastro responde HTTP 201', function () { pm.response.to.have.status(201); });",
+              "const body = pm.response.json();",
+              "pm.test('Cadastro cria um cidadao', function () { pm.expect(body.papel).to.eql('CIDADAO'); });",
+              "pm.environment.set('testEmail', body.email);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Cidadao de Teste\",\n  \"email\": \"{{testEmail}}\",\n  \"senha\": \"{{testPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{apiBaseUrl}}/auth/registro"
+      }
+    },
+    {
+      "name": "5 - Login do cidadao de teste",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login responde HTTP 200', function () { pm.response.to.have.status(200); });",
+              "const body = pm.response.json();",
+              "pm.test('Login devolve token de cidadao', function () { pm.expect(body.token).to.be.a('string').and.not.empty; pm.expect(body.papel).to.eql('CIDADAO'); });",
+              "pm.environment.set('apiToken', body.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"senha\": \"{{testPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{apiBaseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "6 - Criar ocorrencia ficticia",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.environment.set('fakeDescription', `Teste ficticio Lares: lampada apagada em uma praca municipal (${Date.now()}).`);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Criacao da ocorrencia responde HTTP 201', function () { pm.response.to.have.status(201); });",
+              "const body = pm.response.json();",
+              "pm.test('Ocorrencia inicia como RECEBIDA', function () { pm.expect(body.status).to.eql('RECEBIDA'); });",
+              "pm.test('Resposta contem identificador', function () { pm.expect(body.id).to.exist; });",
+              "pm.environment.set('ocorrenciaId', body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{apiToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"descricao\": \"{{fakeDescription}}\",\n  \"bairro\": \"Bairro de Teste\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{apiBaseUrl}}/ocorrencias"
+      }
+    },
+    {
+      "name": "7 - Verificar resultado da triagem",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Consulta responde HTTP 200', function () { pm.response.to.have.status(200); });",
+              "const body = pm.response.json();",
+              "pm.test('Triagem concluiu', function () { pm.expect(body.status, 'A ocorrencia ainda pode estar RECEBIDA; aguarde ate 2 minutos e reenvie esta consulta.').to.eql('TRIADA'); });",
+              "pm.test('Categoria, prioridade e prazo foram gravados', function () { pm.expect(body.categoria.codigo).to.be.oneOf(['BURACO', 'ILUMINACAO', 'LIXO', 'CALCADA', 'ARVORE', 'SINALIZACAO', 'OUTROS']); pm.expect(body.prioridade).to.be.oneOf(['BAIXA', 'MEDIA', 'ALTA']); pm.expect(body.prazoEstimadoDias).to.be.a('number').and.to.be.above(0); });",
+              "pm.test('Historico registra a triagem', function () { pm.expect(body.historico).to.be.an('array').that.satisfies(items => items.some(item => item.statusNovo === 'TRIADA')); });",
+              "console.log('Ocorrencia verificada; id:', body.id, 'status:', body.status, 'categoria:', body.categoria && body.categoria.codigo, 'origem deve ser conferida nos logs da Lares-IA.');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{apiToken}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{apiBaseUrl}}/ocorrencias/{{ocorrenciaId}}"
+      }
+    },
+    {
+      "name": "8 - Consultar minhas ocorrencias",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Consulta responde HTTP 200', function () { pm.response.to.have.status(200); });",
+              "const body = pm.response.json();",
+              "pm.test('Pagina contem a ocorrencia criada', function () { pm.expect(body.itens).to.be.an('array').that.satisfies(items => items.some(item => String(item.id) === String(pm.environment.get('ocorrenciaId')))); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{apiToken}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{apiBaseUrl}}/ocorrencias/minhas?page=0&size=10"
+      }
+    }
+  ]
+}

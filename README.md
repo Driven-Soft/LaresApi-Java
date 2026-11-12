@@ -1,15 +1,20 @@
-# Lares — API Java
+# LaresApi
 
 **Projeto:** Lares, zeladoria colaborativa · Global Solution 2026/2 · CitizenTech
+
 **Equipe:** Driven Soft
+
 **Disciplina:** Java Advanced
+
 **Repositórios integrados:** [Lares-Mobile](https://github.com/Driven-Soft/Lares-Mobile) · [Lares-IA](https://github.com/Driven-Soft/Lares-IA) · [LaresApi-NET](https://github.com/Driven-Soft/LaresApi-NET)
+
 > **Repositório GitHub:** [https://github.com/Driven-Soft/LaresApi-Java](https://github.com/Driven-Soft/LaresApi-Java)
 
 ## Links da entrega
 
 > - **Deploy:** [LaresApi-Java](https://laresapi-java.onrender.com)
-> - **Vídeo pitch:** [Demonstração da solução LaresApi - Driven Soft (Global Solution 2 | 2026)](https://www.youtube.com/watch?v=Uh9tMj9W-fk)
+>
+> - **Vídeo pitch:** [Demonstração da solução LaresApi - Driven Soft (Global Solution 2 | 2026)](.)
 
 ## Integrantes
 
@@ -184,6 +189,7 @@ excluir a própria ocorrência enquanto ela estiver `RECEBIDA` ou `TRIADA`.
 │   └── test/                     # testes automatizados
 ├── .env.example                 # nomes das variáveis, sem credenciais
 ├── docker-compose.yml           # API e RabbitMQ locais
+├── documentos/                  # collection Postman e guia de teste da triagem
 ├── Dockerfile                   # imagem multi-stage
 ├── mvnw / mvnw.cmd              # Maven Wrapper para Linux/macOS e Windows
 ├── pom.xml                      # dependências e build Maven
@@ -208,10 +214,11 @@ O Compose sobe a API e o RabbitMQ, mas **não** provisiona um Oracle local.
    ```
 
 2. Edite o `.env` local e configure `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`,
-   `JWT_SECRET`, `OPENAI_API_KEY` e `RABBITMQ_DEFAULT_PASS`.
-3. Configure `TRIAGEM_BASE_URL` e `TRIAGEM_API_KEY` quando o serviço Lares-IA
-   estiver disponível. Até lá, a conexão ponta a ponta com a triagem não pode
-   ser validada.
+   `JWT_SECRET`, `OPENAI_API_KEY`, `RABBITMQ_DEFAULT_PASS` e `TRIAGEM_API_KEY`.
+   Use `TRIAGEM_BASE_URL=https://lares-ia.onrender.com`.
+3. Configure `TRIAGEM_BASE_URL` e `TRIAGEM_API_KEY` no `.env` local e no
+   ambiente do Render. O passo a passo e os testes Postman estão em
+   [`documentos/TESTE_INTEGRACAO_TRIAGEM.md`](./documentos/TESTE_INTEGRACAO_TRIAGEM.md).
 4. Inicie os serviços:
 
    ```powershell
@@ -365,6 +372,11 @@ Com a API em execução:
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 - Swagger UI do deploy: `https://laresapi-java.onrender.com/swagger-ui/index.html`
 
+Para configurar as variáveis do Render e testar a integração com dados
+fictícios no Postman, consulte [`documentos/TESTE_INTEGRACAO_TRIAGEM.md`](./documentos/TESTE_INTEGRACAO_TRIAGEM.md)
+e importe a [collection](./documentos/Lares-Integracao-Triagem.postman_collection.json)
+e o [ambiente](./documentos/Lares-Render.postman_environment.json).
+
 Use **Authorize** no Swagger UI e informe `Bearer <token>` para testar rotas
 protegidas.
 
@@ -375,15 +387,16 @@ O blueprint `render.yaml` configura a imagem Docker, o deploy da branch `main` e
 o health check em `/actuator/health`. Os valores secretos são configurados no
 painel do Render.
 
-O deploy e o teste integrado da triagem dependem de o serviço Lares-IA estar
-publicado e de a conectividade do Oracle estar confirmada. A URL do serviço e
-sua chave devem ser configuradas como variáveis do Render, nunca no repositório.
+O serviço Lares-IA está publicado em `https://lares-ia.onrender.com`. Para o
+fluxo completo, configure `TRIAGEM_BASE_URL` e `TRIAGEM_API_KEY` no Render e
+confirme a conectividade com o Oracle. Nunca versione a chave de integração.
 
 ## 12. Limitações e próximos passos
 
-- A integração de ponta a ponta com Lares-IA depende do deploy do serviço
-  externo. Quando estiver disponível, validar contrato, autenticação,
-  timeouts, categorias e comportamento de fallback.
+- A integração de ponta a ponta com Lares-IA depende das variáveis de ambiente
+  corretas no Render. Validar contrato, autenticação, timeouts, categorias e
+  comportamento de fallback com os testes de
+  [`documentos/TESTE_INTEGRACAO_TRIAGEM.md`](./documentos/TESTE_INTEGRACAO_TRIAGEM.md).
 - A conexão do Render com o Oracle da FIAP precisa ser confirmada. Se o acesso
   externo não for permitido, será necessário usar o banco alternativo definido
   pela equipe.
