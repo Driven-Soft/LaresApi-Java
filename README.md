@@ -400,8 +400,10 @@ prefixo automaticamente.
 
 O serviço está publicado em [https://laresapi-java.onrender.com](https://laresapi-java.onrender.com).
 O blueprint `render.yaml` configura a imagem Docker, o deploy da branch `main` e
-o health check em `/actuator/health`. Os valores secretos são configurados no
-painel do Render.
+o health check em `/actuator/health`. O deploy define `TZ=America/Sao_Paulo`
+para gerar novos timestamps no horário local; os registros já existentes no
+banco não são convertidos. Os valores secretos são configurados no painel do
+Render.
 
 O serviço Lares-IA está publicado em `https://lares-ia.onrender.com`. A API usa
 `TRIAGEM_BASE_URL` e `TRIAGEM_API_KEY` para integrar com ele; esses valores,

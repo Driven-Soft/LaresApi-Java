@@ -23,6 +23,8 @@ services:
         sync: false
       - key: OPENAI_MODEL
         value: gpt-4o-mini
+      - key: TZ
+        value: America/Sao_Paulo
       - key: TRIAGEM_BASE_URL
         sync: false
       - key: TRIAGEM_API_KEY
