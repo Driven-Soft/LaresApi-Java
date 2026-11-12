@@ -62,6 +62,9 @@ public class SecurityConfig {
 						.requestMatchers(HttpMethod.PATCH, "/ocorrencias/*/status").hasRole("GESTOR")
 						.requestMatchers(HttpMethod.GET, "/ocorrencias/**").authenticated()
 						.requestMatchers(HttpMethod.GET, "/categorias").authenticated()
+						.requestMatchers(HttpMethod.POST, "/categorias").hasRole("GESTOR")
+						.requestMatchers(HttpMethod.PUT, "/categorias/**").hasRole("GESTOR")
+						.requestMatchers(HttpMethod.DELETE, "/categorias/**").hasRole("GESTOR")
 						.requestMatchers("/usuarios/me").authenticated()
 						.anyRequest().authenticated())
 				.exceptionHandling(exceptionHandling -> exceptionHandling

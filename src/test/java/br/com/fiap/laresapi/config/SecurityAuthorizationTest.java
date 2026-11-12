@@ -1,9 +1,14 @@
 package br.com.fiap.laresapi.config;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -23,15 +28,22 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import br.com.fiap.laresapi.controller.CategoriaController;
 import br.com.fiap.laresapi.controller.OcorrenciaController;
+import br.com.fiap.laresapi.dto.categoria.CategoriaRequest;
+import br.com.fiap.laresapi.dto.categoria.CategoriaResponse;
+import br.com.fiap.laresapi.service.CategoriaService;
 import br.com.fiap.laresapi.service.OcorrenciaService;
 
-@WebMvcTest(OcorrenciaController.class)
+@WebMvcTest({ OcorrenciaController.class, CategoriaController.class })
 @Import({ SecurityConfig.class, SecurityErrorHandler.class, SecurityAuthorizationTest.TestConfig.class })
 class SecurityAuthorizationTest {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@Autowired
+	private CategoriaService categoriaService;
 
 	@Test
 	void requisicaoSemTokenRetorna401Padronizado() throws Exception {
@@ -69,6 +81,60 @@ class SecurityAuthorizationTest {
 				.andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
 	}
 
+	@Test
+	void cidadaoNaoPodeModificarCategorias() throws Exception {
+		String corpo = """
+				{
+				  "codigo": "NOVA_CATEGORIA",
+				  "nome": "Nova categoria",
+				  "descricao": "Descrição de teste",
+				  "prazoPadraoDias": 14
+				}
+				""";
+
+		mockMvc.perform(post("/categorias")
+				.header("Authorization", "Bearer token-cidadao")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(corpo))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/categorias/1")
+				.header("Authorization", "Bearer token-cidadao")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(corpo))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(delete("/categorias/1")
+				.header("Authorization", "Bearer token-cidadao"))
+				.andExpect(status().isForbidden());
+	}
+
+	@Test
+	void gestorPodeCriarCategoria() throws Exception {
+		when(categoriaService.criar(any(CategoriaRequest.class)))
+				.thenReturn(new CategoriaResponse(
+						1L,
+						"NOVA_CATEGORIA",
+						"Nova categoria",
+						"Descrição de teste",
+						14));
+
+		mockMvc.perform(post("/categorias")
+				.header("Authorization", "Bearer token-gestor")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{
+						  "codigo": "NOVA_CATEGORIA",
+						  "nome": "Nova categoria",
+						  "descricao": "Descrição de teste",
+						  "prazoPadraoDias": 14
+						}
+						"""))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.codigo").value("NOVA_CATEGORIA"))
+				.andExpect(jsonPath("$.prazoPadraoDias").value(14));
+	}
+
 	@TestConfiguration
 	@EnableWebSecurity
 	static class TestConfig {
@@ -79,13 +145,19 @@ class SecurityAuthorizationTest {
 		}
 
 		@Bean
+		CategoriaService categoriaService() {
+			return mock(CategoriaService.class);
+		}
+
+		@Bean
 		JwtDecoder jwtDecoder() {
 			return token -> {
 				Instant agora = Instant.now();
+				String papel = "token-gestor".equals(token) ? "GESTOR" : "CIDADAO";
 				return Jwt.withTokenValue(token)
 						.header("alg", "none")
 						.subject("cidadao.teste@example.com")
-						.claim("papel", "CIDADAO")
+						.claim("papel", papel)
 						.claim("usuarioId", 1L)
 						.issuedAt(agora)
 						.expiresAt(agora.plusSeconds(3600))

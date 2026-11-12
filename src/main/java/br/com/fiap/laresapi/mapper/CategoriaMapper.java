@@ -9,6 +9,11 @@ import br.com.fiap.laresapi.entity.Categoria;
 public class CategoriaMapper {
 
 	public CategoriaResponse toResponse(Categoria categoria) {
-		return new CategoriaResponse(categoria.getId(), categoria.getCodigo(), categoria.getNome());
+		return new CategoriaResponse(
+				categoria.getId(),
+				categoria.getCodigo(),
+				categoria.getNome(),
+				categoria.getDescricao(),
+				categoria.getPrazoPadraoDias());
 	}
 }

@@ -154,6 +154,10 @@ apropriado.
 Categorias carregadas pelo seed: `BURACO`, `ILUMINACAO`, `LIXO`, `CALCADA`,
 `ARVORE`, `SINALIZACAO` e `OUTROS`.
 
+Gestores podem criar, editar e excluir categorias pela API. O código de uma
+categoria precisa ser reconhecido pelo serviço Lares-IA para ser usado na
+triagem automática; categorias vinculadas a ocorrências não podem ser excluídas.
+
 ### Ciclo de status
 
 ```text
@@ -327,6 +331,9 @@ dados pessoais reais.
 | `POST` | `/auth/login` | Público | Autenticar e obter token |
 | `GET` | `/usuarios/me` | Autenticado | Consultar usuário autenticado |
 | `GET` | `/categorias` | Autenticado | Listar categorias |
+| `POST` | `/categorias` | `GESTOR` | Criar categoria |
+| `PUT` | `/categorias/{id}` | `GESTOR` | Editar categoria |
+| `DELETE` | `/categorias/{id}` | `GESTOR` | Excluir categoria se não estiver em uso |
 | `POST` | `/ocorrencias` | `CIDADAO` | Registrar ocorrência |
 | `GET` | `/ocorrencias/minhas?page=0&size=10` | `CIDADAO` | Listar ocorrências próprias |
 | `GET` | `/ocorrencias?bairro=Centro&status=TRIADA&sort=prioridade&page=0&size=10` | Autenticado | Pesquisar ocorrências |
@@ -377,8 +384,20 @@ Atualização de status:
 }
 ```
 
+Nova categoria:
+
+```json
+{
+  "codigo": "NOVA_CATEGORIA",
+  "nome": "Nova categoria",
+  "descricao": "Descrição da categoria urbana",
+  "prazoPadraoDias": 14
+}
+```
+
 Erros de validação, autenticação e autorização seguem a resposta padronizada da
-API. Transições inválidas retornam `409 Conflict`.
+API. Transições inválidas retornam `409 Conflict`; excluir uma categoria que
+já esteja vinculada a ocorrências também retorna conflito.
 
 ## 10. Swagger / OpenAPI
 
