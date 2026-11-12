@@ -93,7 +93,9 @@ flowchart LR
 
 Se a triagem externa falhar, a ocorrência permanece `RECEBIDA`. Se somente a
 geração de textos do Spring AI falhar, a triagem é salva sem `resumoIa` e
-`mensagemCidadao`.
+`mensagemCidadao`. Nesse caso, o log registra o identificador da ocorrência,
+os tipos de exceção e, quando disponível, o status HTTP, sem registrar a
+mensagem da exceção ou o conteúdo enviado ao provedor.
 
 ### Componentes integrados
 

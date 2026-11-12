@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
 
 import br.com.fiap.laresapi.dto.ai.ConteudoOcorrenciaIa;
@@ -64,10 +65,32 @@ public class OcorrenciaTriagemConsumer {
 					resultado.prazoEstimadoDias());
 		} catch (RuntimeException exception) {
 			LOGGER.warn(
-					"Falha ao gerar os textos de IA da ocorrência {}; a triagem será gravada sem eles",
+					"Falha ao gerar os textos de IA da ocorrência {}; a triagem será gravada sem eles "
+							+ "(erro={}, causa={}, httpStatus={})",
 					ocorrenciaId,
-					exception);
+					exception.getClass().getName(),
+					tipoDaCausa(exception),
+					statusHttp(exception));
 			return null;
 		}
+	}
+
+	private static String tipoDaCausa(RuntimeException exception) {
+		Throwable cause = exception.getCause();
+		return cause == null ? "indisponivel" : cause.getClass().getName();
+	}
+
+	private static String statusHttp(RuntimeException exception) {
+		Throwable cause = exception;
+		while (cause != null) {
+			if (cause instanceof RestClientResponseException responseException) {
+				return String.valueOf(responseException.getStatusCode().value());
+			}
+			if (cause.getCause() == cause) {
+				break;
+			}
+			cause = cause.getCause();
+		}
+		return "indisponivel";
 	}
 }
