@@ -198,6 +198,11 @@ excluir a própria ocorrência enquanto ela estiver `RECEBIDA` ou `TRIADA`.
 
 ## 6. Como executar localmente
 
+Para avaliar a API sem montar infraestrutura local, use o deploy do Render e
+o [Swagger publicado](https://laresapi-java.onrender.com/swagger-ui/index.html).
+A execução com Docker Compose abaixo é opcional e voltada a quem já tem um
+Oracle acessível.
+
 ### Pré-requisitos
 
 - JDK 17.
@@ -205,7 +210,9 @@ excluir a própria ocorrência enquanto ela estiver `RECEBIDA` ou `TRIADA`.
 - Acesso a um Oracle compatível com as migrations do projeto.
 - Uma chave OpenAI e uma senha para o RabbitMQ local.
 
-O Compose sobe a API e o RabbitMQ, mas **não** provisiona um Oracle local.
+O Compose sobe a API e o RabbitMQ, mas **não** provisiona um Oracle. Sem um
+Oracle acessível e as variáveis de ambiente configuradas, `docker compose up`
+não inicia a API.
 
 1. Copie o modelo de ambiente:
 
@@ -334,8 +341,7 @@ ordena `ALTA`, `MEDIA`, `BAIXA` e, em seguida, pela abertura mais antiga.
 
 O feed é intencionalmente colaborativo, não privado: qualquer usuário
 autenticado pode pesquisar ocorrências e consultar os detalhes e o histórico de
-qualquer ocorrência. Use relatos fictícios na demonstração e não inclua dados
-pessoais desnecessários ou informações sigilosas.
+qualquer ocorrência.
 
 ### Exemplos de requisição
 
