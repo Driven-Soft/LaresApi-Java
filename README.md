@@ -121,7 +121,7 @@ geração de textos do Spring AI falhar, a triagem é salva sem `resumoIa` e
 | Integração HTTP | `RestClient` | Chamada ao serviço externo de triagem |
 | Documentação | Springdoc OpenAPI | Swagger UI e contrato OpenAPI |
 | Empacotamento | Docker, Docker Compose | API e RabbitMQ em ambiente local |
-| Deploy planejado | Render, CloudAMQP | Hospedagem da API e broker gerenciado |
+| Deploy | Render | API publicada em container Docker com health check |
 
 A publicação do evento é feita após o commit para evitar que o consumidor
 receba um identificador ainda não persistido. O cadastro público sempre cria
@@ -300,12 +300,16 @@ são públicos.
 
 ### Usuários de teste
 
-Não há usuários de teste nem credenciais padrão criados pelas migrations.
-Para testar o papel `CIDADAO`, cadastre uma conta em `POST /auth/registro` com
-um e-mail e uma senha próprios e autentique-se em `POST /auth/login`. O cadastro
-público não permite escolher o papel. Uma conta `GESTOR` precisa ser criada ou
-provisionada administrativamente; não existe uma credencial de gestor pública
-para este projeto.
+As migrations criam as contas abaixo para avaliação:
+
+| Papel | E-mail | Senha |
+| --- | --- | --- |
+| `CIDADAO` | `cidadao.teste@example.com` | `CidadaoDemo2026!` |
+| `GESTOR` | `gestor.teste@example.com` | `GestorDemo2026!` |
+
+As senhas são armazenadas com BCrypt. Essas credenciais são públicas e
+exclusivas para demonstração; não as reutilize em produção nem associe a elas
+dados pessoais reais.
 
 ## 9. Contrato da API
 
@@ -327,6 +331,11 @@ para este projeto.
 Listas paginadas usam `page` iniciado em zero e `size` até 100, no formato
 `{ itens, pagina, tamanho, totalItens, totalPaginas }`. `sort=prioridade`
 ordena `ALTA`, `MEDIA`, `BAIXA` e, em seguida, pela abertura mais antiga.
+
+O feed é intencionalmente colaborativo, não privado: qualquer usuário
+autenticado pode pesquisar ocorrências e consultar os detalhes e o histórico de
+qualquer ocorrência. Use relatos fictícios na demonstração e não inclua dados
+pessoais desnecessários ou informações sigilosas.
 
 ### Exemplos de requisição
 
@@ -377,8 +386,9 @@ fictícios no Postman, consulte [`documentos/TESTE_INTEGRACAO_TRIAGEM.md`](./doc
 e importe a [collection](./documentos/Lares-Integracao-Triagem.postman_collection.json)
 e o [ambiente](./documentos/Lares-Render.postman_environment.json).
 
-Use **Authorize** no Swagger UI e informe `Bearer <token>` para testar rotas
-protegidas.
+No botão **Authorize** do Swagger UI, cole somente o valor do token retornado
+por `POST /auth/login`, sem o prefixo `Bearer`. O Swagger acrescenta esse
+prefixo automaticamente.
 
 ## 11. Deploy
 
@@ -387,23 +397,21 @@ O blueprint `render.yaml` configura a imagem Docker, o deploy da branch `main` e
 o health check em `/actuator/health`. Os valores secretos são configurados no
 painel do Render.
 
-O serviço Lares-IA está publicado em `https://lares-ia.onrender.com`. Para o
-fluxo completo, configure `TRIAGEM_BASE_URL` e `TRIAGEM_API_KEY` no Render e
-confirme a conectividade com o Oracle. Nunca versione a chave de integração.
+O serviço Lares-IA está publicado em `https://lares-ia.onrender.com`. A API usa
+`TRIAGEM_BASE_URL` e `TRIAGEM_API_KEY` para integrar com ele; esses valores,
+assim como os de banco, RabbitMQ e OpenAI, devem estar configurados nos secrets
+do Render. Nunca versione a chave de integração.
 
 ## 12. Limitações e próximos passos
 
-- A integração de ponta a ponta com Lares-IA depende das variáveis de ambiente
-  corretas no Render. Validar contrato, autenticação, timeouts, categorias e
-  comportamento de fallback com os testes de
-  [`documentos/TESTE_INTEGRACAO_TRIAGEM.md`](./documentos/TESTE_INTEGRACAO_TRIAGEM.md).
-- A conexão do Render com o Oracle da FIAP precisa ser confirmada. Se o acesso
-  externo não for permitido, será necessário usar o banco alternativo definido
-  pela equipe.
-- Usuários de teste e gestores precisam ser provisionados no banco; não há
-  credenciais de teste embutidas neste README.
-- O fluxo completo com Oracle, RabbitMQ/CloudAMQP, OpenAI e aplicação Mobile
-  ainda requer validação integrada.
+- A triagem é assíncrona. Se a publicação ou o processamento falhar, a ocorrência
+  pode permanecer em `RECEBIDA`; ainda não há fila de mensagens mortas nem
+  reprocessamento automático.
+- A execução local requer acesso a um Oracle e configuração das integrações
+  externas descritas em [Como executar localmente](#6-como-executar-localmente).
+- O fluxo completo da triagem pode ser exercitado com dados fictícios seguindo
+  [`documentos/TESTE_INTEGRACAO_TRIAGEM.md`](./documentos/TESTE_INTEGRACAO_TRIAGEM.md)
+  e a collection Postman do repositório.
 
 ## 13. Uso responsável e declaração de uso de IA
 
