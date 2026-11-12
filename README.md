@@ -274,6 +274,7 @@ O `.env.example` documenta as variáveis aceitas:
 | `RABBITMQ_DEFAULT_USER`, `RABBITMQ_DEFAULT_PASS` | Usuário e senha do RabbitMQ local no Compose |
 | `OPENAI_API_KEY` | Chave usada pelo Spring AI |
 | `OPENAI_MODEL` | Modelo configurável; padrão `gpt-4o-mini` |
+| `APP_CORS_ALLOWED_ORIGINS` | Origens exatas autorizadas para chamadas de navegador; padrão `http://localhost:8081`, separadas por vírgula |
 | `TRIAGEM_BASE_URL` | URL base do serviço Lares-IA |
 | `TRIAGEM_API_KEY` | Chave enviada no header `X-API-Key` à triagem |
 | `PORT` | Porta HTTP, fornecida pela plataforma de deploy |
@@ -386,6 +387,12 @@ Com a API em execução:
 - Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 - Swagger UI do deploy: `https://laresapi-java.onrender.com/swagger-ui/index.html`
+
+O Expo Web usa por padrão a origem `http://localhost:8081`. Essa origem já é
+permitida pelo padrão do CORS. Para usar outro endereço web, configure
+`APP_CORS_ALLOWED_ORIGINS` com as origens exatas separadas por vírgula, sem
+caminho nem curinga; no Render, altere a variável no painel para incluir a
+origem do app publicado.
 
 Para configurar as variáveis do Render e testar a integração com dados
 fictícios no Postman, consulte [`documentos/TESTE_INTEGRACAO_TRIAGEM.md`](./documentos/TESTE_INTEGRACAO_TRIAGEM.md)
