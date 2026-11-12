@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -75,6 +76,11 @@ public class ApiExceptionHandler {
 
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ErroResponse> handleUnexpectedException(Exception exception) {
+		if (exception instanceof ErrorResponse errorResponse
+				&& errorResponse.getStatusCode().is4xxClientError()) {
+			HttpStatus status = HttpStatus.valueOf(errorResponse.getStatusCode().value());
+			return erro(status, status.getReasonPhrase(), Map.of());
+		}
 		LOGGER.error("Erro inesperado ao processar requisição", exception);
 		return erro(
 				HttpStatus.INTERNAL_SERVER_ERROR,
