@@ -72,8 +72,8 @@ public class OcorrenciaService {
 	}
 
 	@Transactional(readOnly = true)
-	public PaginaResponse<OcorrenciaResponse> listarMinhas(Long usuarioId, PageRequest pageRequest) {
-		validarPaginacao(pageRequest);
+	public PaginaResponse<OcorrenciaResponse> listarMinhas(Long usuarioId, int page, int size) {
+		PageRequest pageRequest = criarPageRequest(page, size);
 		Page<Ocorrencia> pagina = ocorrenciaRepository.findByUsuarioId(usuarioId, pageRequest);
 		return paraPagina(pagina);
 	}
@@ -83,8 +83,9 @@ public class OcorrenciaService {
 			String bairro,
 			StatusOcorrencia status,
 			String sort,
-			PageRequest pageRequest) {
-		validarPaginacao(pageRequest);
+			int page,
+			int size) {
+		PageRequest pageRequest = criarPageRequest(page, size);
 		String bairroNormalizado = bairro == null || bairro.isBlank() ? null : bairro.trim();
 		Page<Ocorrencia> pagina;
 
@@ -197,10 +198,11 @@ public class OcorrenciaService {
 		return comentario == null || comentario.isBlank() ? null : comentario.trim();
 	}
 
-	private void validarPaginacao(PageRequest pageRequest) {
-		if (pageRequest.getPageNumber() < 0 || pageRequest.getPageSize() > MAX_PAGE_SIZE) {
+	private PageRequest criarPageRequest(int page, int size) {
+		if (page < 0 || size < 1 || size > MAX_PAGE_SIZE) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Parâmetros de paginação inválidos");
 		}
+		return PageRequest.of(page, size);
 	}
 
 	private HistoricoStatus criarHistorico(

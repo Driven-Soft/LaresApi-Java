@@ -3,6 +3,8 @@ package br.com.fiap.laresapi.exception;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,8 @@ import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ErroResponse> handleMethodArgumentNotValid(MethodArgumentNotValidException exception) {
@@ -67,6 +71,15 @@ public class ApiExceptionHandler {
 		HttpStatus status = HttpStatus.valueOf(exception.getStatusCode().value());
 		String message = exception.getReason() == null ? status.getReasonPhrase() : exception.getReason();
 		return erro(status, message, Map.of());
+	}
+
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<ErroResponse> handleUnexpectedException(Exception exception) {
+		LOGGER.error("Erro inesperado ao processar requisição", exception);
+		return erro(
+				HttpStatus.INTERNAL_SERVER_ERROR,
+				"Erro interno do servidor",
+				Map.of());
 	}
 
 	private ResponseEntity<ErroResponse> erro(HttpStatus status, String mensagem, Map<String, String> campos) {

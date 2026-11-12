@@ -1,6 +1,5 @@
 package br.com.fiap.laresapi.controller;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -51,7 +50,7 @@ public class OcorrenciaController {
 			@AuthenticationPrincipal Jwt jwt,
 			@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "10") int size) {
-		return ocorrenciaService.listarMinhas(usuarioId(jwt), PageRequest.of(page, size));
+		return ocorrenciaService.listarMinhas(usuarioId(jwt), page, size);
 	}
 
 	@GetMapping
@@ -61,7 +60,7 @@ public class OcorrenciaController {
 			@RequestParam(defaultValue = "dataAbertura") String sort,
 			@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "10") int size) {
-		return ocorrenciaService.buscar(bairro, status, sort, PageRequest.of(page, size));
+		return ocorrenciaService.buscar(bairro, status, sort, page, size);
 	}
 
 	@GetMapping("/{id}")
